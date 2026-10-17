@@ -4,8 +4,8 @@
 
         SECTION code_clib
 
-        EXTERN  puartd
-        EXTERN  puartc
+        EXTERN  puart_tbr
+        EXTERN  puart_usr
 
         PUBLIC  fputc_cons_native
         PUBLIC  _fputc_cons_native
@@ -22,9 +22,9 @@ _fputc_cons_native:
         ld      e,0DH           ;else insert carridge return
         call    fputc1          ;and print it first
         ld      e,0AH           ;then print linefeed
-fputc1: in      a,(puartc)      ;uart status reg
-        and     01H             ;tx data ready bit
+fputc1: in      a,(puart_usr)   ;uart status reg
+        and     40H             ;tx data ready bit
         jp      z,fputc1        ;wait for ready
         ld      a,e             ;get char back
-        out     (puartd),a      ;write to uart
+        out     (puart_tbr),a   ;write to uart
         ret

@@ -4,21 +4,12 @@
 
         SECTION code_clib
 
-        EXTERN  puartd
-        EXTERN  puartc
-        EXTERN  padc1
-        EXTERN  padc2
-        EXTERN  pdac
-        EXTERN  uenabl
-        EXTERN  urts
+        EXTERN  puart_usr
+        EXTERN  puart_tbr
         EXTERN  CPU_CLK_kHz
         
         PUBLIC  _io_inp
         PUBLIC  _io_outp
-        PUBLIC  _beep_en
-        PUBLIC  _beep_dis
-        PUBLIC  _adc1_in
-        PUBLIC  _adc2_in
 
 ;-------------------------------------------------------------------------
 ; Implementation for read or write access to arbitrary io addres space port
@@ -70,37 +61,37 @@ _io_outp:
         ld      (hl),0D3H      ;OUT instruction
         jp      (hl)           ;jmp to (hl) location
 
-;-------------------------------------------------------------------------
-; extern void beep_en(void)
-_beep_en:
-        ld      a,uenabl+urts   ;beep on/off gate on RTS line
-        out     (puartc),a      ;uart control reg
-        ret
-
-;-------------------------------------------------------------------------
-; extern void beep_dis(void)
-_beep_dis:
-        ld      a,uenabl        ;disable RTS and DTR lines
-        out     (puartc),a      ;uart control reg
-        ret
-
-;-------------------------------------------------------------------------
-; extern uint8 adc1_in(void)
-_adc1_in:
-        out     (padc1),a       ;dummy write to start conversion
-        call    dly140us        ;wait for conversion (takes 140us)
-        in      a,(padc1)       ;read result
-        ld      l,a             ;return val in (h)l
-        ret
-
-;-------------------------------------------------------------------------
-; extern uint8 adc2_in(void)
-_adc2_in:
-        out     (padc2),a       ;dummy write to start conversion
-        call    dly140us        ;wait for conversion (takes 140us)
-        in      a,(padc2)       ;read result
-        ld      l,a             ;return val in (h)l
-        ret
+;;-------------------------------------------------------------------------
+;; extern void beep_en(void)
+;_beep_en:
+;        ld      a,uenabl+urts   ;beep on/off gate on RTS line
+;        out     (puartc),a      ;uart control reg
+;        ret
+;
+;;-------------------------------------------------------------------------
+;; extern void beep_dis(void)
+;_beep_dis:
+;        ld      a,uenabl        ;disable RTS and DTR lines
+;        out     (puartc),a      ;uart control reg
+;        ret
+;
+;;-------------------------------------------------------------------------
+;; extern uint8 adc1_in(void)
+;_adc1_in:
+;        out     (padc1),a       ;dummy write to start conversion
+;        call    dly140us        ;wait for conversion (takes 140us)
+;        in      a,(padc1)       ;read result
+;        ld      l,a             ;return val in (h)l
+;        ret
+;
+;;-------------------------------------------------------------------------
+;; extern uint8 adc2_in(void)
+;_adc2_in:
+;        out     (padc2),a       ;dummy write to start conversion
+;        call    dly140us        ;wait for conversion (takes 140us)
+;        in      a,(padc2)       ;read result
+;        ld      l,a             ;return val in (h)l
+;        ret
 
 ;-------------------------------------------------------------------------
 dly140us:                       ;(2/XTAL)*n*(4+10)=140us -> n=XTAL_kHz/200

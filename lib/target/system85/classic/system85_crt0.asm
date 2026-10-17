@@ -25,42 +25,49 @@
         PUBLIC    _getidx
         PUBLIC    _get_msec
 
-        PUBLIC    puartd
-        PUBLIC    puartc
+        PUBLIC    puart_tbr
+        PUBLIC    puart_usr
 ;        PUBLIC    pspiclk
 ;        PUBLIC    pselect
 ;        PUBLIC    padc1
 ;        PUBLIC    padc2
 
-        PUBLIC    uenabl
-        PUBLIC    udtr
-        PUBLIC    urts
+;        PUBLIC    uenabl
+;        PUBLIC    udtr
+;        PUBLIC    urts
 
 ;        PUBLIC    eepgsz
         PUBLIC    CPU_CLK_kHz
 
 ;-------------------------------------------------------------------------
-; *** IO PORT MAP AND RELATED DEFINES FOR MICRO8085 ***
-piocmd  equ  00H
-pioa    equ  01H
-piob    equ  02H
-pioc    equ  03H
-ptiml   equ  04H
-ptimh   equ  05H
-puartd  equ  80H
-puartc  equ  81H
+; *** IO PORT MAP AND RELATED DEFINES FOR SYSTEM85 ***
+piocmd    equ  00H
+pioa      equ  01H
+piob      equ  02H
+pioc      equ  03H
+ptiml     equ  04H
+ptimh     equ  05H
+
+puart_tbr  equ  80H
+puart_ucr  equ  81H
+puart_mcr  equ  82H ; R/W
+puart_brsr equ  83H
+
+puart_rbr  equ  80H
+puart_usr  equ  81H
+puart_msr  equ  83H
+
 ;pspiclk equ  20H    ;DUMMY WRITE TO GENERATE CLOCK
 ;pselect equ  30H    ;TWO BIT OUTPUT REGISTER
 ;padc1   equ  40H    ;ADC CONV.TIME 140 MICROSEC FROM
 ;padc2   equ  50H    ;OUT(WRITE/START) TO IN(READ)
 ;pdac    equ  60H
 
-; *** INTEL8251 UART COMMANDS ETC ***
-ureset  equ  40H    ;01000000b    ;RESET COMMAND
-usetup  equ  4EH    ;01001110b    ;8 DATA, 1 STOP, X16
-uenabl  equ  15H    ;00010101b    ; - ,ERRST,RXEN, - ,TXEN
-udtr    equ  02H    ;00000010b    ; - ,  -  , -  ,DTR, -
-urts    equ  20H    ;00100000b    ;RTS,  -  , -  , - , -
+; *** 82c52 UART COMMANDS ETC ***
+ucr_init  equ 3EH ;00111110b 00 = reserved, 11 = 8 DATA, 11x = 1 parity none, 0 = 1 stop bit
+mcr_init  equ 00H ;00100100b 0 = must, 0 modem int disabled, 1 rx enable, 00 normal mode, 1 int en, 00 DTR RTS high
+; XTAL is 1.8432 MHz prescale 3 divisor 4 give 9600 baud
+brsr_init equ 85H ;10000101b 1 = co is baud rate gen 00001 = divisor 4, 01 = prescale 3
 
 ; *** SERIAL EEPROM COMMANDS AND SIZE ***
 ;eepgsz  equ  64     ;IMPLEMENTATION ALLOWS MAX PAGE SIZE 256 BYTE
@@ -145,7 +152,7 @@ intr65: push    af
         ld      a,(_putidx)     ;get the buffer put index
         ld      l,a             ;prepare for memory access
         ld      h,_urxbuf/256   ;msb of buffer address
-        in      a,(puartd)      ;get the char from uart
+        in      a,(puart_rbr)   ;get the char from uart
         ld      (hl),a          ;poke it to buffer
         inc     l               ;bump buf put index
         ld      a,(_getidx)     ;peek the get index
@@ -189,17 +196,13 @@ target_init:
 ;        out     (pdac),a        ;PUT OUT HALF VCC ON DAC
 ;        sub     a               ;RESET A
 ;        out     (pselect),a     ;RESET D F/F select LINES
-;8251_uart
-; TODO change to 8252 stuff baud rate at least
-        out     (puartc),a      ;PUT 8251 IN COMMAND MODE
-        out     (puartc),a      ;WRITE 0 THREE TIMES
-        out     (puartc),a   
-        ld      a,ureset        ;RESET COMMAND
-        out     (puartc),a      ;WRITE IT TO 8251 USART
-        ld      a,usetup        ;8 DATA, 1 STOP, X16
-        out     (puartc),a      ;WRITE IT TO 8251 USART
-        ld      a,uenabl        ;ERRST, RXEN, TXEN
-        out     (puartc),a      ;WRITE IT TO 8251 USART
+;8252_uart
+        ld      a,ucr_init      ;UART configuration
+        out     (puart_ucr),a   ;WRITE IT TO 8252
+        ld      a,brsr_init     ;Baud Generator configuration
+        out     (puart_brsr),a  ;WRITE IT TO 8252
+        ld      a,mcr_init      ;Modem Configuratoin and enable
+        out     (puart_mcr),a   ;WRITE IT TO 8252
 ;8155_timer
         ld      hl,CPU_CLK_kHz
         sra     hl              ;DIV BY 2 TO GET TIMER COUNT

@@ -4,8 +4,8 @@
 
         SECTION code_clib
 
-        EXTERN  puartd
-        EXTERN  puartc
+        EXTERN  puart_tbr
+        EXTERN  puart_usr
 
         PUBLIC  _uart_puts
 
@@ -18,11 +18,11 @@ puts1:  ld      a,(hl)          ;get next char in string
         or      a               ;test if zero
         ret     z               ;quit on null
         ld      b,a             ;temporary storage
-puts2:  in      a,(puartc)      ;uart status reg
-        and     01H             ;tx data ready bit
+puts2:  in      a,(puart_usr)   ;uart status reg
+        and     40H             ;tx data ready bit
         jp      z,puts2         ;wait for ready
         ld      a,b             ;get char back
-        out     (puartd),a      ;uart data reg
+        out     (puart_tbr),a   ;uart data reg
         inc     hl              ;bump pointer
         jp      puts1
 

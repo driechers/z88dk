@@ -4,18 +4,18 @@
 
         SECTION code_clib
 
-        EXTERN  puartd
-        EXTERN  puartc
+        EXTERN  puart_tbr
+        EXTERN  puart_usr
 
         PUBLIC  _uart_putc
 
 ;-------------------------------------------------------------------------
 ; extern void uart_putc(uint8 data);
 _uart_putc:
-        in      a,(puartc)      ;uart status reg
-        and     01H             ;tx data ready bit
+        in      a,(puart_usr)     ;uart status reg
+        and     40H             ;tx data ready bit
         jp      z,_uart_putc    ;wait for ready
         ld      de,sp+2         ;retreive the argument
         ld      a,(de)          ;from behind return addr
-        out     (puartd),a      ;write to uart
+        out     (puart_tbr),a      ;write to uart
         ret

@@ -4,8 +4,8 @@
 
         SECTION code_clib
 
-        EXTERN  puartd
-        EXTERN  puartc
+        EXTERN  puart_tbr
+        EXTERN  puart_usr
 
         PUBLIC  _uart_txput
 
@@ -21,11 +21,11 @@ _uart_txput:
         ld      hl,(de)         ;first pushed is ptr
 txbuf1: dec     bc              ;pre decr to use k flag
         jp      k,txbuf3        ;k true when done
-txbuf2: in      a,(puartc)      ;uart status reg
-        and     01H             ;tx data ready bit
+txbuf2: in      a,(puart_usr)   ;uart status reg
+        and     40H             ;tx data ready bit
         jp      z,txbuf2        ;wait for ready
         ld      a,(hl)          ;get next char in buf
-        out     (puartd),a      ;uart data reg
+        out     (puart_tbr),a   ;uart data reg
         inc     hl              ;bump pointer
         jp      txbuf1
 txbuf3: ret
