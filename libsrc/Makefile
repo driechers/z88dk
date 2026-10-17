@@ -147,6 +147,7 @@ include target/m5/m5.mak
 include target/map1010/map1010.mak
 include target/mc1000/mc1000.mak
 include target/micro8085/micro8085.mak
+include target/system85/system85.mak
 include target/msx/msx.mak
 include target/svi/svi.mak
 include target/mikro80/mikro80.mak

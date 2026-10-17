@@ -1,0 +1,2 @@
+target/system85/obj/${TARGET}/**/*.o
+@classic/stdio/stdio.lst
